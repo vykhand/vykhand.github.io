@@ -372,7 +372,7 @@ See the full [migration guide](https://github.com/Aprova-GmbH/lightodm/blob/main
 ## Project Status
 
 - **Version:** 0.1.0
-- **License:** MIT
+- **License:** Apache 2.0
 - **Repository:** [github.com/Aprova-GmbH/lightodm](https://github.com/Aprova-GmbH/lightodm)
 - **Documentation:** Coming soon on ReadTheDocs
 - **Test Coverage:** >95%
