@@ -7,7 +7,8 @@ tinystructlog: Context-aware logging for Python with zero dependencies.
 
 Set context once, it appears in all your logs automatically. Perfect for async web services, background workers, multi-tenant apps.
 
-🔗 https://github.com/Aprova-GmbH/tinystructlog
+📝 Blog post: https://vykhand.github.io/tinystructlog-Context-Aware-Logging/
+🔗 Repo: https://github.com/Aprova-GmbH/tinystructlog
 
 ## Tweet 2
 The problem: You need to trace which user/request/tenant generated each log line.
