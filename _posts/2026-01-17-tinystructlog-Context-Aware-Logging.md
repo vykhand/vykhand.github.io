@@ -68,10 +68,10 @@ That's it. Set the context once, and it shows up in every log line automatically
 
 ---
 
-## Key Features
+## What Makes It Different
 
-### 1. Thread & Async Safe
-Built on Python's `contextvars`, tinystructlog provides perfect isolation across threads and async tasks:
+### Thread & Async Safe by Default
+Because it's built on Python's `contextvars`, each async task or thread gets its own isolated context. No weird bugs where logs from concurrent requests get mixed up:
 
 ```python
 import asyncio
@@ -91,12 +91,12 @@ await asyncio.gather(
 )
 ```
 
-Each async task maintains its own isolated context. No cross-contamination.
+Each task has its own context. No cross-contamination, no mutexes, no headaches.
 
-### 2. Colored Terminal Output
-Logs are color-coded by level (DEBUG=cyan, INFO=green, WARNING=yellow, ERROR=red, CRITICAL=magenta) with dimmed source locations for better readability.
+### Colored Output That Doesn't Hurt
+Logs are color-coded by level (DEBUG=cyan, INFO=green, WARNING=yellow, ERROR=red, CRITICAL=magenta) with dimmed source locations. It's just nicer to read.
 
-### 3. Temporary Context with Context Managers
+### Temporary Context When You Need It
 
 ```python
 from tinystructlog import log_context
@@ -107,14 +107,18 @@ with log_context(operation="cleanup", task_id="task-123"):
 # Context automatically removed after the block
 ```
 
-### 4. Zero Configuration
-Works out of the box with sensible defaults. Configure via `LOG_LEVEL` environment variable if needed.
+Perfect for adding temporary context that only applies to a specific code block.
+
+### Zero Configuration
+Literally zero configuration. Import it, use it. If you want to change the log level, set the `LOG_LEVEL` environment variable. That's the entire configuration story.
 
 ---
 
-## Real-World Use Cases
+## Real-World Examples
 
 ### FastAPI Integration
+
+Here's how I use it in FastAPI apps—just add a middleware that sets context at the start of each request:
 
 ```python
 from fastapi import FastAPI, Request
@@ -140,8 +144,10 @@ async def add_context(request: Request, call_next):
     return response
 ```
 
+Now every log line in your entire request handling code will include the request ID automatically.
+
 ### Multi-Tenant SaaS
-Track which tenant owns each log entry:
+If you're building a multi-tenant app, this is a lifesaver. Just set the tenant ID once and filter logs by tenant in your log aggregation tool:
 
 ```python
 set_log_context(tenant_id="tenant-123", user_id="user-456")
@@ -149,7 +155,7 @@ log.info("Fetching tenant data")  # Automatically tagged with tenant_id
 ```
 
 ### Background Workers
-Each job gets its own isolated context:
+Each background job gets its own isolated context. Perfect for Celery, RQ, or whatever task queue you're using:
 
 ```python
 async def process_job(job_id: str, job_type: str):
@@ -162,26 +168,52 @@ async def process_job(job_id: str, job_type: str):
 
 ---
 
-## Why Not structlog?
+## How Does It Compare to Other Libraries?
 
-**structlog** is excellent but feature-heavy with external dependencies. If you need JSON output, structured event processing, or extensive customization, use structlog.
+### vs. loguru
 
-**tinystructlog** is minimalistic:
-- Zero runtime dependencies
-- Focused purely on context management
-- Sensible defaults for 90% of use cases
-- Smaller footprint, faster to learn
+[loguru](https://github.com/Delgan/loguru) is probably the most popular "better logging" library for Python. It's great, but it's solving a different problem.
 
-Think of it as the logging equivalent of `requests` (simple, focused) versus `httpx` (feature-rich, complex).
+**loguru** gives you advanced features like automatic log rotation, better exception formatting, and structured JSON output. But for context management, you need to manually call `.bind()` every time:
+
+```python
+from loguru import logger
+
+# You need to bind context explicitly
+context_logger = logger.bind(request_id="abc-def", user_id="12345")
+context_logger.info("Processing request")
+```
+
+With **tinystructlog**, you set the context once using `contextvars`, and it automatically propagates to all log calls in the current async task or thread—without explicit binding:
+
+```python
+from tinystructlog import get_logger, set_log_context
+
+log = get_logger(__name__)
+set_log_context(request_id="abc-def", user_id="12345")
+log.info("Processing request")  # Context automatically included
+```
+
+**When to use loguru:** You need log rotation, structured JSON output, or really nice exception traces.
+
+**When to use tinystructlog:** You just want automatic context propagation with zero dependencies and zero configuration.
+
+### vs. structlog
+
+**structlog** is the heavyweight champion of structured logging. It's incredibly powerful but also complex—processors, formatters, event dictionaries, binding contexts. If you need that level of control, use structlog.
+
+**tinystructlog** is the opposite: zero dependencies, zero configuration, four functions in the entire API. If you just need context-aware logging without the ceremony, tinystructlog is simpler.
+
+Think of it like `requests` (simple, focused) vs `httpx` (feature-rich, complex). Both are great, just different philosophies.
 
 ---
 
 ## Project Status
 
-- **Version:** 0.1.0
+- **Version:** 0.1.2
 - **License:** MIT
 - **Repository:** [github.com/Aprova-GmbH/tinystructlog](https://github.com/Aprova-GmbH/tinystructlog)
-- **Documentation:** Coming soon on ReadTheDocs
+- **Documentation:** [tinystructlog.readthedocs.io](https://tinystructlog.readthedocs.io)
 - **Test Coverage:** 100%
 - **Python Support:** 3.11, 3.12, 3.13
 
@@ -189,28 +221,28 @@ Think of it as the logging equivalent of `requests` (simple, focused) versus `ht
 
 ## Design Philosophy
 
-tinystructlog follows a few simple principles:
+I kept tinystructlog intentionally small:
 
-1. **Zero dependencies for zero friction**: No runtime dependencies means no version conflicts, no security vulnerabilities from transitive deps, and instant installation.
+1. **Zero dependencies**: No runtime dependencies means no version conflicts, no surprise security vulnerabilities from transitive deps, and instant installation. Just pure Python.
 
-2. **Do one thing well**: Context management. That's it. No JSON encoding, no syslog handlers, no custom formatters beyond colored output.
+2. **Do one thing**: Context management. That's it. I'm not trying to build log rotation, syslog handlers, or custom serialization. There are already libraries for that.
 
-3. **Type hints everywhere**: Full type hint support for better IDE autocomplete and static analysis.
+3. **Type hints everywhere**: Full type hints for better IDE autocomplete. If your editor supports it, you'll get nice autocompletion.
 
-4. **Async-first, but sync-compatible**: Built on `contextvars`, which works seamlessly in both sync and async code.
+4. **Async-first, but sync works too**: Built on `contextvars`, which works seamlessly in both sync and async code. You don't need to think about it.
 
 ---
 
-## Try It
+## Try It Out
 
 ```bash
 pip install tinystructlog
 ```
 
-Or check out the [GitHub repository](https://github.com/Aprova-GmbH/tinystructlog) for examples and documentation.
+Check out the [GitHub repository](https://github.com/Aprova-GmbH/tinystructlog) for more examples and full documentation.
 
-If you're building Python applications with async workers, web frameworks, or multi-tenant systems, give tinystructlog a try. It solves one problem—context propagation—and solves it well.
+If you're building async web services, background workers, or multi-tenant apps and you're tired of manually threading context through every function call, give it a shot. It's a small library that does one thing well.
 
 ---
 
-**Questions or feedback?** Open an issue on [GitHub](https://github.com/Aprova-GmbH/tinystructlog/issues) or reach out at vya@aprova.ch.
+**Questions or feedback?** Open an issue on [GitHub](https://github.com/Aprova-GmbH/tinystructlog/issues) or email me at vya@aprova.ch.
