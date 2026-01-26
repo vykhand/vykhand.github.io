@@ -1,28 +1,26 @@
-# Introducing LightODM: Minimalistic MongoDB ODM for Python
+# LightODM: A Lightweight MongoDB ODM for Python
 
-## The Problem: Beanie is Great, But Sometimes Too Heavy
+## Why I Built This
 
-If you're building Python applications with MongoDB, you've probably heard of [Beanie](https://github.com/roman-right/beanie)—an excellent async MongoDB ODM built on Pydantic and Motor. It's powerful, feature-rich, and production-ready.
+I've been using [Beanie](https://github.com/roman-right/beanie) for MongoDB projects, and it's genuinely a great ODM—well-designed, feature-rich, and solid for production use. But on several projects, I kept running into the same friction points:
 
-But what if you:
-- Need **both sync AND async** support?
-- Want **direct PyMongo/Motor access** without abstraction layers?
-- Prefer **MongoDB's native query syntax** over custom query builders?
-- Value **simplicity and transparency** over comprehensive features?
+- I needed both sync and async in the same codebase (FastAPI endpoints + background workers)
+- The custom query builder felt like learning a new language when I already knew MongoDB's syntax
+- I wanted to drop down to raw PyMongo/Motor when needed, without fighting abstractions
+- For simpler projects, the feature set felt heavier than necessary
 
-That's why I built [**LightODM**](https://github.com/Aprova-GmbH/lightodm)—a minimalistic alternative to Beanie that gives you Pydantic v2 validation with full control over your MongoDB operations.
+So I built [**LightODM**](https://github.com/Aprova-GmbH/lightodm)—not as a replacement for Beanie, but as a lighter alternative when you want Pydantic validation without giving up direct control over MongoDB.
 
 ---
 
-## The Solution: LightODM
+## What is LightODM?
 
-LightODM is a lightweight Object-Document Mapper that provides:
-- ✅ **Dual sync/async support** (PyMongo + Motor)
-- ✅ **Pydantic v2 native** integration
-- ✅ **Direct MongoDB access** (no query builder abstractions)
-- ✅ **Singleton connection management** with thread-safety
-- ✅ **~500 lines of code** (vs Beanie's ~5000+)
-- ✅ **Only 3 dependencies** (pydantic, pymongo, motor)
+It's a minimal ODM that focuses on the essentials:
+- Works with both sync (PyMongo) and async (Motor) in the same model
+- Uses Pydantic v2 for validation and serialization
+- Lets you use MongoDB's native query syntax (no DSL to learn)
+- Exposes the actual PyMongo/Motor collections when you need them
+- Stays small (~500 lines) with just 3 dependencies: pydantic, pymongo, motor
 
 ### Installation
 
@@ -30,7 +28,7 @@ LightODM is a lightweight Object-Document Mapper that provides:
 pip install lightodm
 ```
 
-Requires Python 3.11+. That's it.
+Works with Python 3.8+.
 
 ---
 
@@ -38,25 +36,25 @@ Requires Python 3.11+. That's it.
 
 | Feature | LightODM | Beanie |
 |---------|----------|--------|
-| **Sync Support** | ✅ Yes | ❌ No (async only) |
+| **Sync Support** | ✅ Yes | ❌ Async only |
 | **Async Support** | ✅ Yes | ✅ Yes |
 | **Code Size** | ~500 lines | ~5000+ lines |
-| **Query Syntax** | Native MongoDB | Custom query builder |
-| **Pydantic** | v2 native | v1 compatibility |
-| **Dependencies** | 3 | Many |
-| **Learning Curve** | Minimal | Moderate |
+| **Query Syntax** | MongoDB native | Custom query builder |
+| **Pydantic** | v2 | v2 |
+| **Core Dependencies** | 3 (pydantic, pymongo, motor) | 5+ |
+| **Connection** | Environment variables | init_beanie() required |
 
-**When to use LightODM:**
-- You need both sync and async
-- You prefer MongoDB's native syntax
-- You want minimal abstraction
-- Simplicity > features
+**Use LightODM when:**
+- You need both sync and async operations
+- You already know MongoDB query syntax and don't want to learn a DSL
+- You want to access raw PyMongo/Motor collections easily
+- You prefer fewer abstractions
 
-**When to use Beanie:**
-- Async-only is fine
-- You want built-in relationships
-- You need migration tools
-- Features > simplicity
+**Use Beanie when:**
+- You only need async (it's async-first by design)
+- You want document relationships and links built in
+- You prefer a query builder API over raw MongoDB syntax
+- You need more ODM features out of the box
 
 ---
 
@@ -79,15 +77,17 @@ class User(MongoBaseModel):
 
 ### Connect to MongoDB
 
-```python
-from lightodm import connect
+Set up your connection via environment variables:
 
-# Simple connection
-connect(
-    url="mongodb://localhost:27017",
-    db_name="myapp"
-)
+```bash
+export MONGO_URL="mongodb://localhost:27017"
+export MONGO_DB_NAME="myapp"
+# Optional:
+export MONGO_USER="your_user"
+export MONGO_PASSWORD="your_password"
 ```
+
+That's it—LightODM handles the connection automatically when you use your models.
 
 ### Synchronous Operations
 
@@ -229,13 +229,9 @@ class User(MongoBaseModel):
 
 ```python
 from fastapi import FastAPI, HTTPException
-from lightodm import connect, MongoBaseModel
+from lightodm import MongoBaseModel
 
 app = FastAPI()
-
-@app.on_event("startup")
-async def startup():
-    connect(db_name="myapp")
 
 class User(MongoBaseModel):
     class Settings:
@@ -256,6 +252,8 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 ```
+
+Just make sure your environment variables are set before starting the app.
 
 ### Multi-Tenant Applications
 
