@@ -6,7 +6,7 @@
 
 ## Why another playground?
 
-At [Aprova GmbH](https://aprova.de), we do AI-assisted data extraction from complex documents. When a new document type lands on my desk, I want to throw it at the API and immediately see what comes back — entities, tables, bounding boxes, confidence scores, everything.
+At [Aprova GmbH](https://aprova.ch), we do AI-assisted data extraction from complex documents. When a new document type lands on my desk, I want to throw it at the API and immediately see what comes back — entities, tables, bounding boxes, confidence scores, everything.
 
 A while back I built an [Azure Document Intelligence playground](https://azure-di-showcase.streamlit.app/) ([repo](https://github.com/vykhand/azure-di-showcase)) for exactly this purpose. This weekend I decided to build the same thing for GCP Document AI.
 
