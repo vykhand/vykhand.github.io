@@ -235,5 +235,7 @@ Perfect for FastAPI, multi-tenant apps, or any service where you need to track c
 - Python 3.11+
 
 GitHub: https://github.com/Aprova-GmbH/tinystructlog
+PyPI: `pip install tinystructlog`
+Blog: https://vykhand.github.io/tinystructlog-Context-Aware-Logging/
 
 It's tiny (hence the name) but saves me so much time!
